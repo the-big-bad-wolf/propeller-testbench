@@ -5,7 +5,6 @@ import { Line } from "solid-chartjs";
 interface WebSocketData {
 	i: number;
 	force_measurements: number[];
-	// Add more properties as needed
 }
 
 interface chartData {
@@ -17,37 +16,38 @@ interface chartData {
 }
 
 const WebSocketComponent = () => {
-	const [force_measurements, setData] = createSignal<number[] | null>(null);
-	const [chartData, setChartData] = createSignal<chartData>({
-		labels: ["January", "February", "March", "April", "May"],
+	const chartData: chartData = {
+		labels: [],
 		datasets: [
 			{
 				label: "Force",
-				data: [50, 60, 70, 80, 90],
+				data: [],
 			},
 		],
-	});
+	};
+	const socket = new WebSocket("ws://192.168.137.150:81");
+	const [ref, setRef] = createSignal<HTMLCanvasElement | null>(null);
+	const [sliderValue, setSliderValue] = createSignal(0);
 
-	const socket = new WebSocket("ws://192.168.137.157:81");
 	socket.onerror = event => {
 		console.error("WebSocket error observed:", event);
 		socket.close();
 	};
+
 	socket.onopen = () => {
 		console.log("WebSocket connection opened");
 	};
-	// Handle incoming messages
+
 	socket.onmessage = event => {
 		const data: WebSocketData = JSON.parse(event.data);
-		// Do something with the parsed message
-		console.log(data);
-		setData(data.force_measurements);
 
-		const newChartData = {
-			labels: [...chartData().labels.slice(-10), data.i.toString()],
-			datasets: [{ label: "Force", data: [...chartData().datasets[0].data.slice(-10), data.i] }],
-		};
-		setChartData(newChartData);
+		if (chartData.labels.length > 10) {
+			chartData.labels.shift();
+			chartData.datasets[0].data.shift();
+		}
+		chartData.labels.push(data.force_measurements.length.toString());
+		chartData.datasets[0].data.push(...data.force_measurements);
+		Chart.getChart(ref()!)?.update();
 	};
 
 	onMount(() => {
@@ -58,19 +58,79 @@ const WebSocketComponent = () => {
 	});
 
 	return (
-		<div>
-			<h1>Live Data Stream</h1>
-			<p>{force_measurements()}</p>
-			<Line
-				type="line"
-				data={chartData()}
-				options={{
-					responsive: false,
-					maintainAspectRatio: false,
-				}}
-				width={720}
-				height={360}
-			/>
+		<div class="flex">
+			<div class="h-[90vh] w-2/3">
+				<h1 class="text-2xl ml-1">Live Data Stream</h1>
+				<Line
+					ref={setRef}
+					type="line"
+					data={chartData}
+					options={{
+						scales: {
+							y: {
+								ticks: {
+									callback: function (value: number, index: number, ticks: number[]) {
+										return value + "N";
+									},
+								},
+								min: 0,
+								max: 100,
+							},
+							x: {
+								min: 0,
+								max: 10,
+							},
+						},
+						responsive: true,
+						maintainAspectRatio: false,
+					}}
+					width={400}
+					height={100}
+				/>
+			</div>
+			<div class="w-1/3 mx-4 flex-col">
+				<h1 class="text-2xl ml-1 mb-2 text-center">Control Panel</h1>
+				<div>
+					<h2 class="mb-2">Motor Speed</h2>
+					<input
+						type="range"
+						min={-127}
+						max={127}
+						value={sliderValue()}
+						step={1}
+						class="range range-primary w-full"
+						onInput={event => setSliderValue(Number(event.currentTarget.value))}
+					/>
+					<label>{sliderValue()}</label>
+				</div>
+				<div></div>
+				<div class="flex w-full justify-evenly my-6">
+					<button
+						class="btn btn-error"
+						onclick={event => {
+							document
+								.getElementById("start-button")!
+								.removeChild(document.getElementById("start-button")!.childNodes[1]);
+							document.getElementById("start-button")!.classList.remove("btn-disabled");
+						}}
+					>
+						Stop
+					</button>
+					<button
+						class="btn"
+						id="start-button"
+						onclick={event => {
+							event.currentTarget.classList.add("btn-disabled");
+							const childElement = document.createElement("span");
+							childElement.classList.add("loading", "loading-spinner");
+							event.currentTarget.appendChild(childElement);
+							socket.send("Hello from frontend!");
+						}}
+					>
+						Start
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 };
