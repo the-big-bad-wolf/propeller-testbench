@@ -44,8 +44,8 @@ const WebSocketComponent = () => {
 		setData(data.force_measurements);
 
 		const newChartData = {
-			labels: [...chartData().labels, data.i.toString()],
-			datasets: [{ label: "Force", data: [...chartData().datasets[0].data, data.i] }],
+			labels: [...chartData().labels.slice(-10), data.i.toString()],
+			datasets: [{ label: "Force", data: [...chartData().datasets[0].data.slice(-10), data.i] }],
 		};
 		setChartData(newChartData);
 	};
