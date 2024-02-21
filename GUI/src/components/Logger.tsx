@@ -1,23 +1,28 @@
 import { createSignal, onCleanup } from "solid-js";
 
-const WebSocketComponent = () => {
-	const [data, setData] = createSignal("");
+interface WebSocketData {
+	i: number;
+	force_measurements: number[];
+	// Add more properties as needed
+}
 
-	// Create a WebSocket connection
+const WebSocketComponent = () => {
+	const [force_measurements, setData] = createSignal<number[] | null>(null);
 	const socket = new WebSocket("ws://192.168.137.157:81");
 
 	socket.onerror = event => {
 		console.error("WebSocket error observed:", event);
+		socket.close();
 	};
 	socket.onopen = () => {
 		console.log("WebSocket connection opened");
 	};
 	// Handle incoming messages
 	socket.onmessage = event => {
-		const message = JSON.parse(event.data);
+		const data: WebSocketData = JSON.parse(event.data);
 		// Do something with the parsed message
-		console.log(message);
-		setData(message);
+		console.log(data);
+		setData(data.force_measurements);
 	};
 
 	// Clean up the WebSocket connection when the component is unmounted
@@ -28,7 +33,7 @@ const WebSocketComponent = () => {
 	return (
 		<div>
 			<h1>Live Data Stream</h1>
-			<p>{data().i}</p>
+			<p>{force_measurements()}</p>
 		</div>
 	);
 };
