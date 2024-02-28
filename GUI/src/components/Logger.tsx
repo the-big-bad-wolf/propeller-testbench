@@ -202,12 +202,12 @@ const WebSocketComponent = () => {
 				<div className="stats shadow mt-10 flex">
 					<div className="stat place-items-center">
 						<div className="stat-title">Voltage</div>
-						<div className="stat-value">{voltage()}</div>
+						<div className="stat-value flex">{voltage()}V</div>
 					</div>
 
 					<div className="stat place-items-center">
 						<div className="stat-title">Current</div>
-						<div className="stat-value text-secondary">{current()}</div>
+						<div className="stat-value text-secondary">{current()}A</div>
 					</div>
 				</div>
 			</div>
