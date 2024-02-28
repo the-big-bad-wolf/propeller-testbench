@@ -29,7 +29,7 @@ const WebSocketComponent = () => {
 			},
 		],
 	};
-	const allData: WebSocketData[] = [];
+	const allData: Measurement[] = [];
 	const socket = new WebSocket("ws://192.168.137.30:81");
 	const [ref, setRef] = createSignal<HTMLCanvasElement | null>(null);
 	const [sliderValue, setSliderValue] = createSignal(0);
@@ -54,7 +54,7 @@ const WebSocketComponent = () => {
 			return;
 		}
 		const data: WebSocketData = JSON.parse(event.data);
-		allData.push(data);
+		allData.push(...data.force_measurements);
 		if (chartData.labels.length > 10) {
 			chartData.labels.shift();
 			chartData.datasets[0].data.shift();
@@ -178,7 +178,7 @@ const WebSocketComponent = () => {
 
 export default WebSocketComponent;
 
-const downloadCSV = (data: WebSocketData[]) => {
+const downloadCSV = (data: Measurement[]) => {
 	const csvContent = "data:text/csv;charset=utf-8," + convertToCSV(data);
 	const encodedUri = encodeURI(csvContent);
 	const link = document.createElement("a");
@@ -188,7 +188,7 @@ const downloadCSV = (data: WebSocketData[]) => {
 	link.click();
 };
 
-const convertToCSV = (data: WebSocketData[]) => {
+const convertToCSV = (data: Measurement[]) => {
 	const headers = Object.keys(data[0]).join(",");
 	const rows = data.map(obj => Object.values(obj).join(","));
 	return [headers, ...rows].join("\n");
