@@ -30,6 +30,8 @@ const WebSocketComponent = () => {
 		],
 	};
 	const allData: Measurement[] = [];
+	let fileName = "data.csv";
+
 	const socket = new WebSocket("ws://192.168.137.30:81");
 	const [ref, setRef] = createSignal<HTMLCanvasElement | null>(null);
 	const [sliderValue, setSliderValue] = createSignal(0);
@@ -50,7 +52,7 @@ const WebSocketComponent = () => {
 				.getElementById("start-button")!
 				.removeChild(document.getElementById("start-button")!.childNodes[1]);
 			document.getElementById("start-button")!.classList.remove("btn-disabled");
-			downloadCSV(allData);
+			downloadCSV(allData, fileName);
 			return;
 		}
 		const data: WebSocketData = JSON.parse(event.data);
@@ -136,6 +138,17 @@ const WebSocketComponent = () => {
 						}}
 					/>
 				</div>
+				<div class="text-center flex-col mt-5">
+					<label class="block mb-2">Name of CSV file</label>
+					<input
+						class="input input-bordered"
+						type="text"
+						onChange={event => {
+							fileName = event.target.value;
+						}}
+					/>
+				</div>
+
 				<div class="flex w-full justify-evenly mt-10">
 					<button
 						class="btn btn-error"
@@ -178,12 +191,12 @@ const WebSocketComponent = () => {
 
 export default WebSocketComponent;
 
-const downloadCSV = (data: Measurement[]) => {
+const downloadCSV = (data: Measurement[], filename: string) => {
 	const csvContent = "data:text/csv;charset=utf-8," + convertToCSV(data);
 	const encodedUri = encodeURI(csvContent);
 	const link = document.createElement("a");
 	link.setAttribute("href", encodedUri);
-	link.setAttribute("download", "data.csv");
+	link.setAttribute("download", filename + ".csv");
 	document.body.appendChild(link);
 	link.click();
 };
