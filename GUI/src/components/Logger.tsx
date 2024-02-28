@@ -9,6 +9,8 @@ interface Measurement {
 
 interface WebSocketData {
 	force_measurements: Measurement[];
+	voltage: number;
+	current: number;
 }
 
 interface chartData {
@@ -30,10 +32,12 @@ const WebSocketComponent = () => {
 		],
 	};
 	const allData: Measurement[] = [];
-	let fileName = "data.csv";
+	let fileName = "data";
 
 	const socket = new WebSocket("ws://192.168.137.30:81");
 	const [ref, setRef] = createSignal<HTMLCanvasElement | null>(null);
+	const [voltage, setVoltage] = createSignal(0);
+	const [current, setCurrent] = createSignal(0);
 	const [sliderValue, setSliderValue] = createSignal(0);
 	const [benchmarkDuration, setBenchmarkDuration] = createSignal(0);
 
@@ -56,6 +60,8 @@ const WebSocketComponent = () => {
 			return;
 		}
 		const data: WebSocketData = JSON.parse(event.data);
+		setVoltage(Number(data.voltage.toFixed(4)));
+		setCurrent(Number(data.current.toFixed(4)));
 		allData.push(...data.force_measurements);
 		if (chartData.labels.length > 10) {
 			chartData.labels.shift();
@@ -113,7 +119,16 @@ const WebSocketComponent = () => {
 				<div>
 					<div class="flex justify-between">
 						<h2 class="mb-2">Motor Speed</h2>
-						<label>{sliderValue()}</label>
+						<input
+							type="number"
+							min={-127}
+							max={127}
+							class="input text-right input-xs w-16 input-ghost"
+							onInput={event => {
+								setSliderValue(Number(event.target.value));
+							}}
+							value={sliderValue()}
+						></input>
 					</div>
 					<input
 						type="range"
@@ -183,6 +198,17 @@ const WebSocketComponent = () => {
 					>
 						Start
 					</button>
+				</div>
+				<div className="stats shadow mt-10 flex">
+					<div className="stat place-items-center">
+						<div className="stat-title">Voltage</div>
+						<div className="stat-value">{voltage()}</div>
+					</div>
+
+					<div className="stat place-items-center">
+						<div className="stat-title">Current</div>
+						<div className="stat-value text-secondary">{current()}</div>
+					</div>
 				</div>
 			</div>
 		</div>
