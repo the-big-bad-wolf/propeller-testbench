@@ -34,7 +34,7 @@ const WebSocketComponent = () => {
 	const allData: Measurement[] = [];
 	let fileName = "data";
 
-	const socket = new WebSocket("ws://192.168.137.30:81");
+	const socket = new WebSocket("ws://192.168.137.247:81");
 	const [ref, setRef] = createSignal<HTMLCanvasElement | null>(null);
 	const [voltage, setVoltage] = createSignal(0);
 	const [current, setCurrent] = createSignal(0);
@@ -48,6 +48,10 @@ const WebSocketComponent = () => {
 
 	socket.onopen = () => {
 		console.log("WebSocket connection opened");
+	};
+
+	socket.onclose = event => {
+		console.log("WebSocket connection closed:", event);
 	};
 
 	socket.onmessage = event => {
@@ -199,15 +203,15 @@ const WebSocketComponent = () => {
 						Start
 					</button>
 				</div>
-				<div className="stats shadow mt-10 flex">
-					<div className="stat place-items-center">
-						<div className="stat-title">Voltage</div>
-						<div className="stat-value flex">{voltage()}V</div>
+				<div class="stats shadow mt-10 flex">
+					<div class="stat place-items-center">
+						<div class="stat-title">Voltage</div>
+						<div class="stat-value flex">{voltage()}V</div>
 					</div>
 
-					<div className="stat place-items-center">
-						<div className="stat-title">Current</div>
-						<div className="stat-value text-secondary">{current()}A</div>
+					<div class="stat place-items-center">
+						<div class="stat-title">Current</div>
+						<div class="stat-value text-secondary">{current()}A</div>
 					</div>
 				</div>
 			</div>
